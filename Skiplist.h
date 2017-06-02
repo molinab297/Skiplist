@@ -45,25 +45,26 @@ public:
     int  Height() const;
     void Print() const;
 
-    const SkiplistNode<type>* Find(type data) const;
+    const SkiplistNode<type>* Find(type key) const;
     const SkiplistNode<type>* Head() const;
     const SkiplistNode<type>* Front() const;
 
 };
 
 
-// Class implementation
+/*****************************************************************************
+ * Skiplist Class Implementation
+ *****************************************************************************/
 template <class type>
 Skiplist<type>::Skiplist() {
-
     this->height = 1;
-
     // Create initial sentinel nodes
     SkiplistNode<type>*level_0_sentinel_node = new SkiplistNode<type>;
     SkiplistNode<type>*level_1_sentinel_node = new SkiplistNode<type>;
     level_1_sentinel_node->SetDownLink(level_0_sentinel_node);
     this->head  = level_1_sentinel_node;
     this->front = level_0_sentinel_node;
+    srand(time(NULL));
 }
 
 template <class type>
@@ -169,9 +170,30 @@ void Skiplist<type>::Remove(type data){
 template <class type>
 bool Skiplist<type>::IsEmpty() const{ return (this->head->GetDown()->GetNext() == nullptr); }
 
+// Returns a read-only pointer to a node that contains 'key'.
+// If the node does not exist or the skip list is empty, this function
+// returns a null pointer.
 template <class type>
-const SkiplistNode<type>* Skiplist<type>::Find(type data) const{
+const SkiplistNode<type>* Skiplist<type>::Find(type key) const{
+    if(this->IsEmpty())
+        return nullptr;
 
+    SkiplistNode<type>*current = this->head;
+    bool found = false;
+    while(current && !found){
+        if(current->GetNext() && current->GetNext()->GetData() > key)
+            current = current->GetDown();
+        else if(current->GetNext() && current->GetNext()->GetData() < key)
+            current = current->GetNext();
+        else if(current->GetNext() && current->GetNext()->GetData() == key)
+            found = true;
+        else
+            current = current->GetDown();
+    }
+
+    if(found)
+        return current->GetNext();
+    return nullptr;
 }
 
 
@@ -221,7 +243,8 @@ template <class type>
 void Skiplist<type>::PrintLinkedList(const SkiplistNode<int>*curr) const{
     curr = curr->GetNext();
     while(curr){
-        std::cout << std::setw(5 +curr->GetData()) << curr->GetData();
+        std::cout << std::setfill('-') << std::setw(5);
+        std::cout << ">" << curr->GetData();
         curr = curr->GetNext();
     }
 }
@@ -230,9 +253,9 @@ void Skiplist<type>::PrintLinkedList(const SkiplistNode<int>*curr) const{
 template <class type>
 void Skiplist<type>::Print() const{
     SkiplistNode<type>*curr = this->head;
-    std::cout << "Sentinel --> \n";
+    unsigned int level = this->height;
     for(int i = 0; i < height + 1; i++){
-        std::cout << "Sentinel --> ";
+        std::cout << "Level " << level - i << " ";
         PrintLinkedList(curr);
         std::cout << std::endl;
         curr = curr->GetDown();
