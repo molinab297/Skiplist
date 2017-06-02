@@ -8,14 +8,13 @@ template <class type>
 Skiplist<type>::Skiplist() {
 
     this->level_count = 1;
-    this->head = nullptr;
-    this->tail = nullptr;
 
     // Create initial sentinel nodes
     SkiplistNode<type>*level_0_sentinel_node = new SkiplistNode<type>;
     SkiplistNode<type>*level_1_sentinel_node = new SkiplistNode<type>;
     level_1_sentinel_node->SetDownLink(level_0_sentinel_node);
-    this->head = level_1_sentinel_node;
+    this->head  = level_1_sentinel_node;
+    this->front = level_0_sentinel_node->GetNext();
 }
 
 template <class type>
@@ -121,12 +120,25 @@ void Skiplist<type>::Remove(type data){
 
 template <class type>
 bool Skiplist<type>::IsEmpty() const{
-
+    return (this->head->GetDown()->GetNext() == nullptr);
 }
 
 template <class type>
-SkiplistNode<type>* Skiplist<type>::Find(type data){
+const SkiplistNode<type>* Skiplist<type>::Find(type data) const{
 
+}
+
+
+// Returns read-only pointer to first sentinel node on the skip list
+template <class type>
+const SkiplistNode<type>* Skiplist<type>::Head() const{
+    return this->head;
+}
+
+// Returns read-only pointer to the first non-sentinel node on the skip list
+template <class type>
+const SkiplistNode<type>* Skiplist<type>::Front() const{
+    return this->head;
 }
 
 template <class type>
