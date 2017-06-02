@@ -28,8 +28,9 @@ class Skiplist {
 private:
     SkiplistNode<type>*head;  // points to first sentinel node on skip list
     SkiplistNode<type>*front; // points to first non-sentinel element on skip list
-    unsigned int level_count; // number of levels on skip list
+    unsigned int height; // number of levels on skip list
 
+    void PrintLinkedList(const SkiplistNode<int>*curr) const;
     void AdjustHeight(unsigned int num_times_to_insert);
     void InsertIntoLinkedList(SkiplistNode<type>*&current, type data);
     int  FlipCoin();
@@ -41,7 +42,8 @@ public:
     void Insert(type data);
     void Remove(type data);
     bool IsEmpty() const;
-    int  GetLevelCount() const;
+    int  Height() const;
+    void Print() const;
 
     const SkiplistNode<type>* Find(type data) const;
     const SkiplistNode<type>* Head() const;
@@ -54,7 +56,7 @@ public:
 template <class type>
 Skiplist<type>::Skiplist() {
 
-    this->level_count = 1;
+    this->height = 1;
 
     // Create initial sentinel nodes
     SkiplistNode<type>*level_0_sentinel_node = new SkiplistNode<type>;
@@ -81,7 +83,7 @@ void Skiplist<type>::InsertIntoLinkedList(SkiplistNode<type>*&current, type data
     // insert new node in proper location
     bool location_found = false;
     while(!location_found && current->GetNext()){
-        if(current->GetNext() > new_node->GetData())
+        if(current->GetNext()->GetData() > data)
             location_found = true;
         else
             current = current->GetNext();
@@ -107,34 +109,30 @@ void Skiplist<type>::Insert(type data){
     // Adjust stack height of sentinel nodes if necessary (The stack of sentinels must always be one greater than level count)
     AdjustHeight(num_times_to_insert);
 
-    // Create new node to be inserted
+    // Create and fill new node to be inserted
     SkiplistNode<type>*new_node = new SkiplistNode<type>;
     new_node->SetData(data);
 
     SkiplistNode<type>*current = this->head;
-    unsigned int current_level = this->level_count;
-    bool location_found = false;
+    unsigned int current_level = this->height;
+    bool location_found        = false;
 
     // traverse left to right (and down the skip list if necessary) and finds the
     // correct location to insert the new node.
     while(!location_found){
         // If we are on the correct level where the new node needs to be inserted first
         if(current_level == num_times_to_insert){
-            if(current->GetNext()) {
-                if (current->GetNext()->GetData() > data)
+            if(current->GetNext() && current->GetNext()->GetData() > data)
                     location_found = true;
-                else
+            else if(current->GetNext() && current->GetNext()->GetData() <= data)
                     current = current->GetNext();
-            }
             else
                 location_found = true;
         }
         else{
-            if(current->GetNext()) {
-                if (current->GetNext() <= data)
+            if(current->GetNext() && current->GetNext()->GetData() <= data)
                     current = current->GetNext();
-            }
-                // move down a level
+            // move down a level
             else{
                 current = current->GetDown();
                 current_level--;
@@ -142,6 +140,7 @@ void Skiplist<type>::Insert(type data){
         }
     }
 
+    // Insert first node
     if(!current->GetNext())
         current->SetNextLink(new_node);
     else{
@@ -149,7 +148,7 @@ void Skiplist<type>::Insert(type data){
         current->SetNextLink(new_node);
     }
 
-    // Traverse down the skip list and create nodes for each level (if coin tosses were > 0)
+    // Traverse the skip list level by level and create nodes for each level (if coin tosses were > 0)
     SkiplistNode<type>*temp = current->GetNext();
     for(unsigned int i = 0; i < num_times_to_insert; i++){
         current = current->GetDown();
@@ -160,11 +159,13 @@ void Skiplist<type>::Insert(type data){
 
 }
 
+// Removes an element from the skip list
 template <class type>
 void Skiplist<type>::Remove(type data){
 
 }
 
+// Returns true if the skip list is empty
 template <class type>
 bool Skiplist<type>::IsEmpty() const{ return (this->head->GetDown()->GetNext() == nullptr); }
 
@@ -190,28 +191,53 @@ const SkiplistNode<type>* Skiplist<type>::Front() const{
     return nullptr;
 }
 
+// Helper function to Insert(Type data)
 template <class type>
-int Skiplist<type>::FlipCoin(){
-    srand (time(NULL));
-    return rand() % 1 + 0;
+int Skiplist<type>::FlipCoin(){ ;
+    return rand() % 2;
 }
 
+// Increases the height of a skip list
 template <class type>
 void Skiplist<type>::AdjustHeight(unsigned int num_times_to_insert) {
-    if(num_times_to_insert >= level_count){
-        unsigned int count = this->level_count;
-        for(unsigned int i = count; i <= num_times_to_insert; i++){
+    if(num_times_to_insert >= height){
+        unsigned int count = this->height;
+        for(unsigned int i = count; i < num_times_to_insert+1; i++){
             SkiplistNode<type>*new_sentinel_node = new SkiplistNode<type>;
             SkiplistNode<type>*temp = this->head;
             this->head = new_sentinel_node;
             this->head->SetDownLink(temp);
-            this->level_count++;
+            this->height++;
         }
     }
 }
 
+// Returns height of skip list
 template <class type>
-int Skiplist<type>::GetLevelCount() const{ return this->level_count; }
+int Skiplist<type>::Height() const{ return this->height; }
+
+// Helper function to Print()
+template <class type>
+void Skiplist<type>::PrintLinkedList(const SkiplistNode<int>*curr) const{
+    curr = curr->GetNext();
+    while(curr){
+        std::cout << std::setw(5 +curr->GetData()) << curr->GetData();
+        curr = curr->GetNext();
+    }
+}
+
+// Prints a skip list in skip list format.
+template <class type>
+void Skiplist<type>::Print() const{
+    SkiplistNode<type>*curr = this->head;
+    std::cout << "Sentinel --> \n";
+    for(int i = 0; i < height + 1; i++){
+        std::cout << "Sentinel --> ";
+        PrintLinkedList(curr);
+        std::cout << std::endl;
+        curr = curr->GetDown();
+    }
+}
 
 
 
