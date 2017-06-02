@@ -58,18 +58,8 @@ void Skiplist<type>::Insert(type data){
     while(FlipCoin() != 0)
         num_times_to_insert++;
 
-    // Adjust stack height of sentinel nodes if necessary.
-    // The stack of sentinels must always be one greater than
-    // the height of the skip list.
-    if(num_times_to_insert >= level_count){
-        for(unsigned int i = level_count; i <= num_times_to_insert; i++){
-            SkiplistNode<type>*new_sentinel_node = new SkiplistNode<type>;
-            SkiplistNode<type>*temp = this->head;
-            this->head = new_sentinel_node;
-            this->head->SetDownLink(temp);
-            this->level_count++;
-        }
-    }
+    // Adjust stack height of sentinel nodes if necessary (The stack of sentinels must always be one greater than level count)
+    AdjustHeight(num_times_to_insert);
 
     // Create new node to be inserted
     SkiplistNode<type>*new_node = new SkiplistNode<type>;
@@ -143,6 +133,19 @@ template <class type>
 int Skiplist<type>::FlipCoin(){
     srand (time(NULL));
     return rand() % 1 + 0;
+}
+
+template <class type>
+void Skiplist<type>::AdjustHeight(unsigned int num_times_to_insert) {
+    if(num_times_to_insert >= level_count){
+        for(unsigned int i = level_count; i <= num_times_to_insert; i++){
+            SkiplistNode<type>*new_sentinel_node = new SkiplistNode<type>;
+            SkiplistNode<type>*temp = this->head;
+            this->head = new_sentinel_node;
+            this->head->SetDownLink(temp);
+            this->level_count++;
+        }
+    }
 }
 
 template <class type>

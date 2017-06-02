@@ -27,6 +27,7 @@ private:
     SkiplistNode<type>*tail;
     unsigned int level_count;
 
+    void AdjustHeight(unsigned int num_times_to_insert);
     void InsertIntoLinkedList(SkiplistNode<type>*&current, type data);
     int FlipCoin();
 
