@@ -130,8 +130,8 @@ void Skiplist<type>::InsertIntoLinkedList(SkiplistNode<type>*&current, type data
     }
 }
 
-// Inserts 'data' into the skip list. The number of times that data is inserted is dependent
-// upon how many heads are flipped in a row (See FlipCoin()).
+// Inserts 'data' into the skip list. The number of times that data is inserted depends
+// on how many heads are flipped in a row by the FlipCoin() function
 template <class type>
 void Skiplist<type>::Insert(type data){
 
@@ -164,6 +164,7 @@ void Skiplist<type>::Insert(type data){
                 location_found = true;
         }
         else{
+            // Check to make sure a node exits to the right before we move current
             if(current->GetNext() && current->GetNext()->GetData() <= data)
                     current = current->GetNext();
             // move down a level
