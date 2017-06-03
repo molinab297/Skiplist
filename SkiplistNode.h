@@ -22,7 +22,6 @@ template <class type>
 class SkiplistNode{
 private:
     SkiplistNode<type> *next;
-    SkiplistNode<type> *prev;
     SkiplistNode<type> *down;
     type data;
 public:
@@ -30,12 +29,9 @@ public:
     ~SkiplistNode();
 
     void SetNextLink(SkiplistNode<type> *next);
-    void SetPrevLink(SkiplistNode<type> *prev);
     void SetDownLink(SkiplistNode<type> *down);
     void SetData(type data);
-
     SkiplistNode<type> *GetNext() const;
-    SkiplistNode<type> *GetPrev() const;
     SkiplistNode<type> *GetDown() const;
     type GetData()                const;
 };
@@ -44,7 +40,6 @@ public:
 template <class type>
 SkiplistNode<type>::SkiplistNode() {
     this->next = nullptr;
-    this->prev = nullptr;
     this->down = nullptr;
 }
 
@@ -57,9 +52,6 @@ template <class type>
 void SkiplistNode<type>::SetNextLink(SkiplistNode *next){ this->next = next; }
 
 template <class type>
-void SkiplistNode<type>::SetPrevLink(SkiplistNode *prev){ this->prev = prev; }
-
-template <class type>
 void SkiplistNode<type>::SetDownLink(SkiplistNode *down){ this->down = down; }
 
 template <class type>
@@ -67,9 +59,6 @@ void SkiplistNode<type>::SetData(type data){ this->data = data; }
 
 template <class type>
 SkiplistNode<type>* SkiplistNode<type>::GetNext() const{ return next; }
-
-template <class type>
-SkiplistNode<type>* SkiplistNode<type>::GetPrev() const{ return prev; }
 
 template <class type>
 SkiplistNode<type>* SkiplistNode<type>::GetDown() const{ return down; }

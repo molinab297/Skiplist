@@ -4,10 +4,10 @@
 
 #ifndef SKIPLIST_SKIPLIST_H
 #define SKIPLIST_SKIPLIST_H
-
 #include "SkiplistNode.h"
 #include <stdlib.h>
 #include <time.h>
+#include <iomanip>
 
 /*****************************************************************************
  * CLASS Skiplist
@@ -33,6 +33,7 @@ private:
     void PrintLinkedList(const SkiplistNode<int>*curr) const;
     void AdjustHeight(unsigned int num_times_to_insert);
     void InsertIntoLinkedList(SkiplistNode<type>*&current, type data);
+    void DeleteSkiplist();
     int  FlipCoin();
 
 public:
@@ -69,7 +70,34 @@ Skiplist<type>::Skiplist() {
 
 template <class type>
 Skiplist<type>::~Skiplist(){
-    // come back to this
+    if(!this->IsEmpty())
+        DeleteSkiplist();
+}
+
+// Frees all memory that was allocated by the skip list.
+// This function is called by the destructor
+template <class type>
+void Skiplist<type>::DeleteSkiplist(){
+    // Delete nodes on each level
+    int i = height;
+    for(i; i >= 0; i--){
+        SkiplistNode<type>*current = this->head;
+        current = current->GetNext();
+        while(current){
+            SkiplistNode<type>*temp = current->GetNext();
+            current->SetNextLink(nullptr);
+            current->SetDownLink(nullptr);
+            delete current;
+            current = temp;
+        }
+        // move head down one level and remove sentinel node
+        SkiplistNode<type>*temp = this->head;
+        head->SetNextLink(nullptr);
+        head = head->GetDown();
+        temp->SetDownLink(nullptr);
+        delete temp;
+        height--;
+    }
 }
 
 // Performs a normal, ascended ordered, linked list insertion. This is a helper function
