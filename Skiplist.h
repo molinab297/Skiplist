@@ -28,13 +28,12 @@ class Skiplist {
 private:
     SkiplistNode<type>*head;  // points to first sentinel node on skip list
     SkiplistNode<type>*front; // points to first non-sentinel element on skip list
-    unsigned int height; // number of levels on skip list
+    unsigned int height;      // number of levels on skip list
 
-    void PrintLinkedList(const SkiplistNode<int>*curr) const;
+    void PrintLinkedList(const SkiplistNode<int>*curr) const; // Helper function to Print()
     void AdjustHeight(unsigned int num_times_to_insert);
-    void InsertIntoLinkedList(SkiplistNode<type>*&current, type data);
-    void DeleteSkiplist();
-    int  FlipCoin();
+    void InsertIntoLinkedList(SkiplistNode<type>*&current, type data); // Helper function to Insert(type data)
+    int  FlipCoin(); // Generates a 1 (for heads) or a 0 (for tails). See Insert(type data)
 
 public:
     Skiplist();
@@ -46,10 +45,9 @@ public:
     int  Height() const;
     void Print() const;
 
-    const SkiplistNode<type>* Find(type key) const;
+    SkiplistNode<type>* Find(type key) const;
     const SkiplistNode<type>* Head() const;
     const SkiplistNode<type>* Front() const;
-
 };
 
 
@@ -58,49 +56,51 @@ public:
  *****************************************************************************/
 template <class type>
 Skiplist<type>::Skiplist() {
+
     this->height = 1;
+
     // Create initial sentinel nodes
     SkiplistNode<type>*level_0_sentinel_node = new SkiplistNode<type>;
     SkiplistNode<type>*level_1_sentinel_node = new SkiplistNode<type>;
+
+    // Set sentinel node values to 'infinity'. (in this case, max int size)
+    level_0_sentinel_node->SetData(INT_MAX);
+    level_1_sentinel_node->SetData(INT_MAX);
+
+    // Set initial links
     level_1_sentinel_node->SetDownLink(level_0_sentinel_node);
     this->head  = level_1_sentinel_node;
     this->front = level_0_sentinel_node;
+
+    // For randomness in insertion method
     srand(time(NULL));
 }
 
 template <class type>
 Skiplist<type>::~Skiplist(){
-    if(!this->IsEmpty())
-        DeleteSkiplist();
-}
-
-// Frees all memory that was allocated by the skip list.
-// This function is called by the destructor
-template <class type>
-void Skiplist<type>::DeleteSkiplist(){
-    // Delete nodes on each level
-    int i = height;
-    for(i; i >= 0; i--){
-        SkiplistNode<type>*current = this->head;
-        current = current->GetNext();
-        while(current){
-            SkiplistNode<type>*temp = current->GetNext();
-            current->SetNextLink(nullptr);
-            current->SetDownLink(nullptr);
-            delete current;
-            current = temp;
+    if(!this->IsEmpty()){
+        // Delete nodes on each level
+        for(int i = height; i >= 0; i--){
+            SkiplistNode<type>*current = this->head;
+            current = current->GetNext();
+            while(current){
+                SkiplistNode<type>*temp = current->GetNext();
+                current->SetNextLink(nullptr);
+                current->SetDownLink(nullptr);
+                delete current;
+                current = temp;
+            }
+            // move head down one level and remove sentinel node
+            SkiplistNode<type>*temp = this->head;
+            head->SetNextLink(nullptr);
+            head = head->GetDown();
+            temp->SetDownLink(nullptr);
+            delete temp;
         }
-        // move head down one level and remove sentinel node
-        SkiplistNode<type>*temp = this->head;
-        head->SetNextLink(nullptr);
-        head = head->GetDown();
-        temp->SetDownLink(nullptr);
-        delete temp;
-        height--;
     }
 }
 
-// Performs a normal, ascended ordered, linked list insertion. This is a helper function
+// Performs a normal, ascending ordered, linked list insertion. This is a helper function
 // to Insert(type data).
 template <class type>
 void Skiplist<type>::InsertIntoLinkedList(SkiplistNode<type>*&current, type data){
@@ -118,15 +118,20 @@ void Skiplist<type>::InsertIntoLinkedList(SkiplistNode<type>*&current, type data
             current = current->GetNext();
     }
 
-    if(!current->GetNext())
+    if(!current->GetNext()) {
         current->SetNextLink(new_node);
+        new_node->SetPrevLink(current);
+    }
     else{
         new_node->SetNextLink(current->GetNext());
+        current->GetNext()->SetPrevLink(new_node);
         current->SetNextLink(new_node);
+        new_node->SetPrevLink(current);
     }
-
 }
 
+// Inserts 'data' into the skip list. The number of times that data is inserted is dependent
+// upon how many heads are flipped in a row (See FlipCoin()).
 template <class type>
 void Skiplist<type>::Insert(type data){
 
@@ -170,11 +175,16 @@ void Skiplist<type>::Insert(type data){
     }
 
     // Insert first node
-    if(!current->GetNext())
+    if(!current->GetNext()) {
         current->SetNextLink(new_node);
+        new_node->SetPrevLink(current);
+    }
     else{
         new_node->SetNextLink(current->GetNext());
+        if(current->GetNext())
+            current->GetNext()->SetPrevLink(new_node);
         current->SetNextLink(new_node);
+        new_node->SetPrevLink(current);
     }
 
     // Traverse the skip list level by level and create nodes for each level (if coin tosses were > 0)
@@ -184,13 +194,43 @@ void Skiplist<type>::Insert(type data){
         InsertIntoLinkedList(current, data); // performs a normal linked list insertion
         temp->SetDownLink(current->GetNext());
         temp = temp->GetDown();
+
     }
 
 }
 
-// Removes an element from the skip list
+// Removes all elements with the key 'data' from the skip list
 template <class type>
 void Skiplist<type>::Remove(type data){
+    SkiplistNode<type>*current = this->Find(data);
+    // If element does not exist, return.
+    if(!current)
+        return;
+
+    // Traverse down skip list and remove each node with data
+    while(current){
+
+        SkiplistNode<type>*prev_to_current = current->GetPrev();
+        SkiplistNode<type>*temp = current;
+        prev_to_current->SetNextLink(current->GetNext());
+        current->SetPrevLink(nullptr);
+
+        if(current->GetNext())
+            current->GetNext()->SetPrevLink(prev_to_current);
+        // decrease height if necessary
+        else if(prev_to_current->GetData() == INT_MAX && !current->GetNext() && this->height != 1){
+            SkiplistNode<type>*temp2 = head;
+            head = head->GetDown();
+            temp2->SetDownLink(nullptr);
+            delete temp2;
+            this->height--;
+        }
+
+        current->SetNextLink(nullptr);
+        current = current->GetDown();
+        temp->SetDownLink(nullptr);
+        delete temp;
+    }
 
 }
 
@@ -198,23 +238,27 @@ void Skiplist<type>::Remove(type data){
 template <class type>
 bool Skiplist<type>::IsEmpty() const{ return (this->head->GetDown()->GetNext() == nullptr); }
 
-// Returns a read-only pointer to a node that contains 'key'.
-// If the node does not exist or the skip list is empty, this function
+// Returns a pointer to the first node that contains 'key'. If the
+// node does not exist or the skip list is empty, this function
 // returns a null pointer.
 template <class type>
-const SkiplistNode<type>* Skiplist<type>::Find(type key) const{
+SkiplistNode<type>* Skiplist<type>::Find(type key) const{
     if(this->IsEmpty())
         return nullptr;
 
     SkiplistNode<type>*current = this->head;
     bool found = false;
     while(current && !found){
+        // Move down to see if we can move through another express lane
         if(current->GetNext() && current->GetNext()->GetData() > key)
             current = current->GetDown();
+        // Move along express lane if the value to the right is less than key
         else if(current->GetNext() && current->GetNext()->GetData() < key)
             current = current->GetNext();
+        // If the key has been found, exit loop and return pointer to node
         else if(current->GetNext() && current->GetNext()->GetData() == key)
             found = true;
+        // By default move down to next express lane
         else
             current = current->GetDown();
     }
@@ -228,7 +272,7 @@ const SkiplistNode<type>* Skiplist<type>::Find(type key) const{
 // Returns read-only pointer to first sentinel node on the skip list
 template <class type>
 const SkiplistNode<type>* Skiplist<type>::Head() const{
-    if(head)
+    if(!IsEmpty())
         return this->head;
     return nullptr;
 }
@@ -255,6 +299,7 @@ void Skiplist<type>::AdjustHeight(unsigned int num_times_to_insert) {
         for(unsigned int i = count; i < num_times_to_insert+1; i++){
             SkiplistNode<type>*new_sentinel_node = new SkiplistNode<type>;
             SkiplistNode<type>*temp = this->head;
+            new_sentinel_node->SetData(INT_MAX);
             this->head = new_sentinel_node;
             this->head->SetDownLink(temp);
             this->height++;

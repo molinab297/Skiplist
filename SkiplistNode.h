@@ -12,8 +12,8 @@
  *
  *  SkiplistNode<type> *next   - a pointer to the right node
  *  SkiplistNode<type> *prev   - a pointer to the left node
- *  SkiplistNode<type> *up     - a pointer to the above node
  *  SkiplistNode<type> *down   - a pointer to the below node
+ *  type data                  - Data element held by node
  *
  * Represents a single node in a Skip-List data structure. This class
  * provides functionality to access each nodes pointers to other nodes.
@@ -21,8 +21,7 @@
 template <class type>
 class SkiplistNode{
 private:
-    SkiplistNode<type> *next;
-    SkiplistNode<type> *down;
+    SkiplistNode<type> *next, *down, *prev;
     type data;
 public:
     SkiplistNode();
@@ -30,9 +29,11 @@ public:
 
     void SetNextLink(SkiplistNode<type> *next);
     void SetDownLink(SkiplistNode<type> *down);
+    void SetPrevLink(SkiplistNode<type> *prev);
     void SetData(type data);
     SkiplistNode<type> *GetNext() const;
     SkiplistNode<type> *GetDown() const;
+    SkiplistNode<type> *GetPrev() const;
     type GetData()                const;
 };
 
@@ -44,9 +45,7 @@ SkiplistNode<type>::SkiplistNode() {
 }
 
 template <class type>
-SkiplistNode<type>::~SkiplistNode() {
-    // come back to this
-}
+SkiplistNode<type>::~SkiplistNode() { }
 
 template <class type>
 void SkiplistNode<type>::SetNextLink(SkiplistNode *next){ this->next = next; }
@@ -55,10 +54,16 @@ template <class type>
 void SkiplistNode<type>::SetDownLink(SkiplistNode *down){ this->down = down; }
 
 template <class type>
+void SkiplistNode<type>::SetPrevLink(SkiplistNode<type> *prev){this->prev = prev;}
+
+template <class type>
 void SkiplistNode<type>::SetData(type data){ this->data = data; }
 
 template <class type>
 SkiplistNode<type>* SkiplistNode<type>::GetNext() const{ return next; }
+
+template <class type>
+SkiplistNode<type>* SkiplistNode<type>::GetPrev() const{ return prev; }
 
 template <class type>
 SkiplistNode<type>* SkiplistNode<type>::GetDown() const{ return down; }
